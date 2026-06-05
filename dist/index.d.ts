@@ -52,8 +52,8 @@ export interface SegDisplayOptions extends SegStyle {
     padChar?: string;
 }
 export type SegDisplayUpdate = SegDisplayOptions;
-export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g';
-export type SegPattern = number | string | Iterable<SegSegment>;
+export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'dp';
+export type SegPattern = number | string | Iterable<SegSegment | 'dot'>;
 export declare const SEGMENT_BITS: Record<SegSegment, number>;
 /**
  * 参数化数码管显示器。调用方只需要 update 数据和样式, 不需要接触 Canvas 绘制流程。

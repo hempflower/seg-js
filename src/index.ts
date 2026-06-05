@@ -69,8 +69,8 @@ export interface SegDisplayOptions extends SegStyle {
 
 export type SegDisplayUpdate = SegDisplayOptions;
 
-export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g';
-export type SegPattern = number | string | Iterable<SegSegment>;
+export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'dp';
+export type SegPattern = number | string | Iterable<SegSegment | 'dot'>;
 
 export const SEGMENT_BITS: Record<SegSegment, number> = {
   a: 1 << 0,
@@ -80,6 +80,12 @@ export const SEGMENT_BITS: Record<SegSegment, number> = {
   e: 1 << 4,
   f: 1 << 5,
   g: 1 << 6,
+  dp: 1 << 7,
+};
+
+const SEGMENT_ALIASES: Record<string, SegSegment> = {
+  dot: 'dp',
+  dp: 'dp',
 };
 
 /** 每个字符点亮哪些段 */
@@ -211,7 +217,7 @@ function drawSevenSegment(
     const d = digits[i];
     for (const sh of d.shapes) fillPoly(sh.pts.map(([x, y]) => M(x, y)), (on & SEGMENT_BITS[sh.s]) !== 0);
     const [dx, dy] = M(d.dpC[0], d.dpC[1]);
-    fillCircle(dx, dy, d.dpR, dots.has(i));
+    fillCircle(dx, dy, d.dpR, dots.has(i) || (on & SEGMENT_BITS.dp) !== 0);
   }
 }
 
@@ -241,11 +247,30 @@ function normalizeText(
 
 function patternToMask(pattern: SegPattern | undefined): number {
   if (pattern == null) return 0;
-  if (typeof pattern === 'number') return pattern & 0x7f;
+  if (typeof pattern === 'number') return pattern & 0xff;
+  if (typeof pattern === 'string') {
+    let mask = 0;
+    for (let i = 0; i < pattern.length; i++) {
+      if (pattern.startsWith('dot', i)) {
+        mask |= SEGMENT_BITS.dp;
+        i += 2;
+        continue;
+      }
+      if (pattern.startsWith('dp', i)) {
+        mask |= SEGMENT_BITS.dp;
+        i += 1;
+        continue;
+      }
+      const segment = pattern[i] === '.' ? 'dp' : pattern[i];
+      mask |= SEGMENT_BITS[segment as SegSegment] ?? 0;
+    }
+    return mask;
+  }
 
   let mask = 0;
   for (const segment of pattern) {
-    mask |= SEGMENT_BITS[segment as SegSegment] ?? 0;
+    const key = SEGMENT_ALIASES[segment] ?? segment;
+    mask |= SEGMENT_BITS[key as SegSegment] ?? 0;
   }
   return mask;
 }

@@ -28,7 +28,7 @@ const display = createSegDisplay(document.getElementById('cv'), {
 });
 
 display.update({ value: '87654321' });
-display.update({ segments: ['abg', 0b0111111, ['a', 'f', 'g', 'c', 'd']] });
+display.update({ segments: ['abg.', 0b10111111, ['a', 'f', 'g', 'c', 'd', 'dp']] });
 ```
 
 浏览器直接用（无需打包器）：
@@ -60,7 +60,7 @@ const display = createSegDisplay(canvas, {
 });
 
 display.update({ value: 654321, color: '#20f7ff' });
-display.update({ segments: [0b1111111, 'bc', 'afged'] });
+display.update({ segments: [0b11111111, 'bc.', ['a', 'f', 'g', 'e', 'd', 'dot']] });
 ```
 
 ### `SegDisplay`
@@ -76,7 +76,7 @@ display.update({ segments: [0b1111111, 'bc', 'afged'] });
 | `value` | `''` | 显示内容，支持 `0-9`、`-`、空格 |
 | `segments` | `undefined` | 每一位要点亮的段；优先级高于 `value` |
 | `digits` | 内容长度 | 固定显示位数；内容不足补齐，超出截断 |
-| `dots` | `[]` | 需点亮小数点的位索引集合 |
+| `dots` | `[]` | 需点亮小数点的位索引集合；也可在 `segments` 里用 `dp`/bit7 控制 |
 | `align` | `'right'` | 补齐或截断方向 |
 | `padChar` | `' '` | 内容不足 `digits` 时的填充字符 |
 | `area` | 全画布 | 显示区域，默认使用 0-1 比例 |
@@ -101,9 +101,9 @@ area: { x: 20, y: 30, w: 320, h: 80, unit: 'px' }
 createSegDisplay(canvas, {
   digits: 4,
   segments: [
-    'abfg',                  // 字符串段名
-    ['a', 'b', 'c'],         // 段名数组
-    0b0111111,               // bitmask
+    'abfg.',                 // 字符串段名, . 表示小数点
+    ['a', 'b', 'c', 'dp'],   // 段名数组, dp/dot 表示小数点
+    0b10111111,              // bitmask, bit7 表示小数点
     0,                       // 全灭
   ],
 });
@@ -120,6 +120,9 @@ bitmask 按位判定是否点亮：
 | `e` | 4 | `1 << 4` |
 | `f` | 5 | `1 << 5` |
 | `g` | 6 | `1 << 6` |
+| `dp` | 7 | `1 << 7` |
+
+字符串段码中也可以用 `.`、`dp` 或 `dot` 表示小数点；段名数组中可以用 `'dp'` 或 `'dot'`。
 
 ### 样式参数
 
