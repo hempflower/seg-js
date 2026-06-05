@@ -38,6 +38,8 @@ export interface SegArea {
 export interface SegDisplayOptions extends SegStyle {
     /** 显示内容 */
     value?: string | number;
+    /** 每一位要点亮的段, 优先级高于 value */
+    segments?: Iterable<SegPattern>;
     /** 固定显示位数; 内容不足会补齐, 超出会截断 */
     digits?: number;
     /** 需要点亮小数点的位索引集合 */
@@ -50,6 +52,9 @@ export interface SegDisplayOptions extends SegStyle {
     padChar?: string;
 }
 export type SegDisplayUpdate = SegDisplayOptions;
+export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g';
+export type SegPattern = number | string | Iterable<SegSegment>;
+export declare const SEGMENT_BITS: Record<SegSegment, number>;
 /**
  * 参数化数码管显示器。调用方只需要 update 数据和样式, 不需要接触 Canvas 绘制流程。
  */

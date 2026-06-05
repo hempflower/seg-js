@@ -53,6 +53,8 @@ export interface SegArea {
 export interface SegDisplayOptions extends SegStyle {
   /** 显示内容 */
   value?: string | number;
+  /** 每一位要点亮的段, 优先级高于 value */
+  segments?: Iterable<SegPattern>;
   /** 固定显示位数; 内容不足会补齐, 超出会截断 */
   digits?: number;
   /** 需要点亮小数点的位索引集合 */
@@ -67,14 +69,28 @@ export interface SegDisplayOptions extends SegStyle {
 
 export type SegDisplayUpdate = SegDisplayOptions;
 
-type SegName = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g';
+export type SegSegment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g';
+export type SegPattern = number | string | Iterable<SegSegment>;
+
+export const SEGMENT_BITS: Record<SegSegment, number> = {
+  a: 1 << 0,
+  b: 1 << 1,
+  c: 1 << 2,
+  d: 1 << 3,
+  e: 1 << 4,
+  f: 1 << 5,
+  g: 1 << 6,
+};
 
 /** 每个字符点亮哪些段 */
-const SEGMENT_MAP: Record<string, string> = {
+const DEFAULT_SEGMENTS: Record<string, string> = {
   '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc',
   '5': 'afgcd', '6': 'afgecd', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg',
   '-': 'g', ' ': '',
 };
+const SEGMENT_MAP: Record<string, number> = Object.fromEntries(
+  Object.entries(DEFAULT_SEGMENTS).map(([key, pattern]) => [key, patternToMask(pattern)]),
+);
 
 const DEFAULTS: Required<Omit<SegOptions, 'dots'>> = {
   color: '#ff2d18',
@@ -91,7 +107,7 @@ const DEFAULTS: Required<Omit<SegOptions, 'dots'>> = {
 type Pt = [number, number];
 
 /** 生成单个数码管(局部坐标, 原点=该位左上角)的 7 段多边形 */
-function digitShapes(u: number, t: number): { s: SegName; pts: Pt[] }[] {
+function digitShapes(u: number, t: number): { s: SegSegment; pts: Pt[] }[] {
   const wH = 5 * u - 2 * t, hH = t;          // 水平段
   const wV = t, hV = (9 * u - 3 * t) / 2;    // 垂直段
   const hpoly = (x: number, y: number): Pt[] => [
@@ -119,12 +135,12 @@ function digitShapes(u: number, t: number): { s: SegName; pts: Pt[] }[] {
 function drawSevenSegment(
   ctx: CanvasRenderingContext2D,
   box: Box,
-  text: string,
+  masks: number[],
   options: SegOptions = {},
 ): void {
   const o = { ...DEFAULTS, ...options };
   const dots = new Set<number>(options.dots ?? []);
-  const n = text.length;
+  const n = masks.length;
   if (n === 0) return;
 
   const shear = Math.tan(-o.skewDeg * Math.PI / 180);
@@ -135,7 +151,7 @@ function drawSevenSegment(
 
   // 收集几何并求斜切后的内容包围盒(含未点亮段与小数点)
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  const digits: { shapes: { s: SegName; pts: Pt[] }[]; dpC: Pt; dpR: number }[] = [];
+  const digits: { shapes: { s: SegSegment; pts: Pt[] }[]; dpC: Pt; dpR: number }[] = [];
   for (let i = 0; i < n; i++) {
     const ox = i * pitch;
     const shapes = digitShapes(u, t).map((sh) => ({
@@ -191,9 +207,9 @@ function drawSevenSegment(
   };
 
   for (let i = 0; i < n; i++) {
-    const on = SEGMENT_MAP[text[i]] ?? '';
+    const on = masks[i] ?? 0;
     const d = digits[i];
-    for (const sh of d.shapes) fillPoly(sh.pts.map(([x, y]) => M(x, y)), on.includes(sh.s));
+    for (const sh of d.shapes) fillPoly(sh.pts.map(([x, y]) => M(x, y)), (on & SEGMENT_BITS[sh.s]) !== 0);
     const [dx, dy] = M(d.dpC[0], d.dpC[1]);
     fillCircle(dx, dy, d.dpR, dots.has(i));
   }
@@ -221,6 +237,43 @@ function normalizeText(
 
   const fill = padChar[0] ?? ' ';
   return align === 'right' ? text.padStart(digits, fill) : text.padEnd(digits, fill);
+}
+
+function patternToMask(pattern: SegPattern | undefined): number {
+  if (pattern == null) return 0;
+  if (typeof pattern === 'number') return pattern & 0x7f;
+
+  let mask = 0;
+  for (const segment of pattern) {
+    mask |= SEGMENT_BITS[segment as SegSegment] ?? 0;
+  }
+  return mask;
+}
+
+function normalizeSegments(
+  segments: Iterable<SegPattern> | undefined,
+  value: string | number | undefined,
+  digits: number | undefined,
+  align: 'left' | 'right',
+  padChar: string,
+): number[] {
+  if (segments) {
+    let masks = Array.from(segments, patternToMask);
+    if (!digits || digits <= 0) return masks;
+
+    if (masks.length > digits) {
+      masks = align === 'right' ? masks.slice(masks.length - digits) : masks.slice(0, digits);
+    }
+
+    const padMask = patternToMask(padChar);
+    const pad = Array.from({ length: digits - masks.length }, () => padMask);
+    return align === 'right' ? [...pad, ...masks] : [...masks, ...pad];
+  }
+
+  return Array.from(
+    normalizeText(value, digits, align, padChar),
+    (char) => SEGMENT_MAP[char] ?? 0,
+  );
 }
 
 function resolveArea(area: SegArea | undefined, width: number, height: number): Box {
@@ -302,7 +355,8 @@ export class SegDisplay {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.ctx.clearRect(0, 0, width, height);
 
-    const text = normalizeText(
+    const masks = normalizeSegments(
+      this.options.segments,
       this.options.value,
       this.options.digits,
       this.options.align ?? 'right',
@@ -312,7 +366,7 @@ export class SegDisplay {
     drawSevenSegment(
       this.ctx,
       resolveArea(this.options.area, width, height),
-      text,
+      masks,
       pickStyle(this.options, this.options.dots ?? []),
     );
   }

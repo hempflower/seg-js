@@ -1,5 +1,13 @@
 //#region src/index.ts
 var e = {
+	a: 1,
+	b: 2,
+	c: 4,
+	d: 8,
+	e: 16,
+	f: 32,
+	g: 64
+}, t = Object.fromEntries(Object.entries({
 	0: "abcdef",
 	1: "bc",
 	2: "abged",
@@ -12,7 +20,7 @@ var e = {
 	9: "abcdfg",
 	"-": "g",
 	" ": ""
-}, t = {
+}).map(([e, t]) => [e, s(t)])), n = {
 	color: "#ff2d18",
 	offColor: "rgba(120,20,12,.18)",
 	glowColor: "rgba(255,45,24,.9)",
@@ -23,7 +31,7 @@ var e = {
 	padX: 2,
 	padY: .65
 };
-function n(e, t) {
+function r(e, t) {
 	let n = 5 * e - 2 * t, r = t, i = t, a = (9 * e - 3 * t) / 2, o = (e, t) => [
 		[e + .1 * n, t],
 		[e + .9 * n, t],
@@ -70,25 +78,25 @@ function n(e, t) {
 		}
 	];
 }
-function r(r, i, a, o = {}) {
+function i(t, i, a, o = {}) {
 	var s;
 	let c = {
-		...t,
+		...n,
 		...o
 	}, l = new Set((s = o.dots) == null ? [] : s), u = a.length;
 	if (u === 0) return;
 	let d = Math.tan(-c.skewDeg * Math.PI / 180), f = u * 6 + (u - 1) * c.digitGap, p = Math.min(i.h / (9 + 2 * c.padY), i.w / (f + 2 * c.padX)), m = p * c.thickness, h = 6 * p + c.digitGap * p, g = Infinity, _ = Infinity, v = -Infinity, y = -Infinity, b = [];
 	for (let e = 0; e < u; e++) {
-		let t = e * h, r = n(p, m).map((e) => ({
+		let t = e * h, n = r(p, m).map((e) => ({
 			s: e.s,
 			pts: e.pts.map(([e, n]) => [e + t, n])
 		})), i = [5.25 * p + m / 2 + t, 9 * p - m / 2], a = m / 2;
 		b.push({
-			shapes: r,
+			shapes: n,
 			dpC: i,
 			dpR: a
 		});
-		for (let e of r) for (let [t, n] of e.pts) {
+		for (let e of n) for (let [t, n] of e.pts) {
 			let e = t + d * n;
 			e < g && (g = e), e > v && (v = e), n < _ && (_ = n), n > y && (y = n);
 		}
@@ -97,30 +105,30 @@ function r(r, i, a, o = {}) {
 			n < g && (g = n), n > v && (v = n), t < _ && (_ = t), t > y && (y = t);
 		}
 	}
-	let x = i.x + i.w / 2 - (g + v) / 2, S = i.y + i.h / 2 - (_ + y) / 2, C = (e, t) => [e + d * t + x, t + S], w = (e, t) => {
-		r.beginPath(), r.moveTo(e[0][0], e[0][1]);
-		for (let t = 1; t < e.length; t++) r.lineTo(e[t][0], e[t][1]);
-		r.closePath(), E(t), r.fill(), r.shadowBlur = 0;
-	}, T = (e, t, n, i) => {
-		r.beginPath(), r.arc(e, t, n, 0, Math.PI * 2), E(i), r.fill(), r.shadowBlur = 0;
+	let x = i.x + i.w / 2 - (g + v) / 2, S = i.y + i.h / 2 - (_ + y) / 2, C = (e, t) => [e + d * t + x, t + S], w = (e, n) => {
+		t.beginPath(), t.moveTo(e[0][0], e[0][1]);
+		for (let n = 1; n < e.length; n++) t.lineTo(e[n][0], e[n][1]);
+		t.closePath(), E(n), t.fill(), t.shadowBlur = 0;
+	}, T = (e, n, r, i) => {
+		t.beginPath(), t.arc(e, n, r, 0, Math.PI * 2), E(i), t.fill(), t.shadowBlur = 0;
 	}, E = (e) => {
-		e ? (r.fillStyle = c.color, r.shadowColor = c.glowColor, r.shadowBlur = c.glow * p) : (r.fillStyle = c.offColor, r.shadowBlur = 0);
+		e ? (t.fillStyle = c.color, t.shadowColor = c.glowColor, t.shadowBlur = c.glow * p) : (t.fillStyle = c.offColor, t.shadowBlur = 0);
 	};
 	for (let t = 0; t < u; t++) {
 		var D;
-		let n = (D = e[a[t]]) == null ? "" : D, r = b[t];
-		for (let e of r.shapes) w(e.pts.map(([e, t]) => C(e, t)), n.includes(e.s));
+		let n = (D = a[t]) == null ? 0 : D, r = b[t];
+		for (let t of r.shapes) w(t.pts.map(([e, t]) => C(e, t)), (n & e[t.s]) !== 0);
 		let [i, o] = C(r.dpC[0], r.dpC[1]);
 		T(i, o, r.dpR, l.has(t));
 	}
 }
-function i(e, t) {
+function a(e, t) {
 	return {
 		...e,
 		dots: t
 	};
 }
-function a(e, t, n, r) {
+function o(e, t, n, r) {
 	var i;
 	let a = e == null ? "" : String(e);
 	if (!t || t <= 0) return a;
@@ -128,7 +136,30 @@ function a(e, t, n, r) {
 	let o = (i = r[0]) == null ? " " : i;
 	return n === "right" ? a.padStart(t, o) : a.padEnd(t, o);
 }
-function o(e, t, n) {
+function s(t) {
+	if (t == null) return 0;
+	if (typeof t == "number") return t & 127;
+	let n = 0;
+	for (let i of t) {
+		var r;
+		n |= (r = e[i]) == null ? 0 : r;
+	}
+	return n;
+}
+function c(e, n, r, i, a) {
+	if (e) {
+		let t = Array.from(e, s);
+		if (!r || r <= 0) return t;
+		t.length > r && (t = i === "right" ? t.slice(t.length - r) : t.slice(0, r));
+		let n = s(a), o = Array.from({ length: r - t.length }, () => n);
+		return i === "right" ? [...o, ...t] : [...t, ...o];
+	}
+	return Array.from(o(n, r, i, a), (e) => {
+		var n;
+		return (n = t[e]) == null ? 0 : n;
+	});
+}
+function l(e, t, n) {
 	var r, i, a, o;
 	let s = (r = e == null ? void 0 : e.x) == null ? 0 : r, c = (i = e == null ? void 0 : e.y) == null ? 0 : i, l = (a = e == null ? void 0 : e.w) == null ? 1 : a, u = (o = e == null ? void 0 : e.h) == null ? 1 : o;
 	return (e == null ? void 0 : e.unit) === "px" ? {
@@ -143,7 +174,7 @@ function o(e, t, n) {
 		h: u * n
 	};
 }
-var s = class {
+var u = class {
 	constructor(e, t = {}) {
 		this.pendingRender = 0, this.canvas = e;
 		let n = e.getContext("2d");
@@ -176,16 +207,16 @@ var s = class {
 	}
 	render() {
 		var e, t, n;
-		let s = this.canvas.clientWidth, c = this.canvas.clientHeight;
-		if (!s || !c) return;
-		let l = typeof window < "u" && window.devicePixelRatio || 1;
-		this.ctx.setTransform(l, 0, 0, l, 0, 0), this.ctx.clearRect(0, 0, s, c);
-		let u = a(this.options.value, this.options.digits, (e = this.options.align) == null ? "right" : e, (t = this.options.padChar) == null ? " " : t);
-		r(this.ctx, o(this.options.area, s, c), u, i(this.options, (n = this.options.dots) == null ? [] : n));
+		let r = this.canvas.clientWidth, o = this.canvas.clientHeight;
+		if (!r || !o) return;
+		let s = typeof window < "u" && window.devicePixelRatio || 1;
+		this.ctx.setTransform(s, 0, 0, s, 0, 0), this.ctx.clearRect(0, 0, r, o);
+		let u = c(this.options.segments, this.options.value, this.options.digits, (e = this.options.align) == null ? "right" : e, (t = this.options.padChar) == null ? " " : t);
+		i(this.ctx, l(this.options.area, r, o), u, a(this.options, (n = this.options.dots) == null ? [] : n));
 	}
 };
-function c(e, t = {}) {
-	return new s(e, t);
+function d(e, t = {}) {
+	return new u(e, t);
 }
 //#endregion
-export { s as SegDisplay, c as createSegDisplay };
+export { e as SEGMENT_BITS, u as SegDisplay, d as createSegDisplay };

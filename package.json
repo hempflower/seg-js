@@ -1,5 +1,5 @@
 {
-  "name": "seg-js",
+  "name": "@hempflower/seg-js",
   "version": "0.1.0",
   "description": "Canvas-based slanted 7-segment LED display renderer (red glow, decimal points, auto-centering).",
   "type": "module",

@@ -1,6 +1,6 @@
 # seg-js
 
-在 HTML Canvas 上绘制**斜体红色 7 段数码管**的小型库：支持固定显示位数、小数点、辉光、未点亮段"鬼影"、按矩形自动水平+垂直居中与高清（devicePixelRatio）渲染。零依赖。
+在 HTML Canvas 上绘制**斜体红色 7 段数码管**的小型库：支持固定显示位数、按位点亮任意段、小数点、辉光、未点亮段"鬼影"、按矩形自动水平+垂直居中与高清（devicePixelRatio）渲染。零依赖。
 
 源自一个把动态数码管叠加到电路板图片数码管区域的需求。
 
@@ -17,7 +17,7 @@ pnpm preview      # 构建后用 Vite 本地预览 examples/
 ## 快速开始
 
 ```ts
-import { createSegDisplay } from 'seg-js';
+import { createSegDisplay } from '@hempflower/seg-js';
 
 const display = createSegDisplay(document.getElementById('cv'), {
   digits: 8,
@@ -28,6 +28,7 @@ const display = createSegDisplay(document.getElementById('cv'), {
 });
 
 display.update({ value: '87654321' });
+display.update({ segments: ['abg', 0b0111111, ['a', 'f', 'g', 'c', 'd']] });
 ```
 
 浏览器直接用（无需打包器）：
@@ -59,6 +60,7 @@ const display = createSegDisplay(canvas, {
 });
 
 display.update({ value: 654321, color: '#20f7ff' });
+display.update({ segments: [0b1111111, 'bc', 'afged'] });
 ```
 
 ### `SegDisplay`
@@ -72,6 +74,7 @@ display.update({ value: 654321, color: '#20f7ff' });
 | 选项 | 默认 | 说明 |
 | --- | --- | --- |
 | `value` | `''` | 显示内容，支持 `0-9`、`-`、空格 |
+| `segments` | `undefined` | 每一位要点亮的段；优先级高于 `value` |
 | `digits` | 内容长度 | 固定显示位数；内容不足补齐，超出截断 |
 | `dots` | `[]` | 需点亮小数点的位索引集合 |
 | `align` | `'right'` | 补齐或截断方向 |
@@ -89,6 +92,34 @@ area: { x: 0.1, y: 0.2, w: 0.8, h: 0.3 }
 ```ts
 area: { x: 20, y: 30, w: 320, h: 80, unit: 'px' }
 ```
+
+### 段码参数
+
+`segments` 用来逐位控制哪些段点亮。每一位可以传三种形式：
+
+```ts
+createSegDisplay(canvas, {
+  digits: 4,
+  segments: [
+    'abfg',                  // 字符串段名
+    ['a', 'b', 'c'],         // 段名数组
+    0b0111111,               // bitmask
+    0,                       // 全灭
+  ],
+});
+```
+
+bitmask 按位判定是否点亮：
+
+| 段 | bit | 值 |
+| --- | --- | --- |
+| `a` | 0 | `1 << 0` |
+| `b` | 1 | `1 << 1` |
+| `c` | 2 | `1 << 2` |
+| `d` | 3 | `1 << 3` |
+| `e` | 4 | `1 << 4` |
+| `f` | 5 | `1 << 5` |
+| `g` | 6 | `1 << 6` |
 
 ### 样式参数
 
@@ -119,18 +150,6 @@ area: { x: 20, y: 30, w: 320, h: 80, unit: 'px' }
 pnpm preview
 # 打开 http://localhost:5173/examples/board.html
 ```
-
-## 发布
-
-仓库包含 GitHub Actions 自动发布配置：发布 GitHub Release 时会运行构建并发布到 npm。
-
-发布前需要：
-
-1. 在 npm 包设置里配置 Trusted Publisher，workflow 文件名填 `publish.yml`。
-2. 确认 Release tag 和 `package.json` 版本一致，例如 `v0.1.0` 对应 `"version": "0.1.0"`。
-3. 发布 GitHub Release。
-
-如果暂时不用 Trusted Publishing，也可以在 GitHub 仓库 Secrets 中添加 `NPM_TOKEN`。
 
 ## License
 
