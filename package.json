@@ -1,6 +1,6 @@
 {
   "name": "@hempflower/seg-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Canvas-based slanted 7-segment LED display renderer (red glow, decimal points, auto-centering).",
   "homepage": "https://github.com/hempflower/seg-js#readme",
   "bugs": {
