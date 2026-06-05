@@ -1,0 +1,42 @@
+{
+  "name": "seg-js",
+  "version": "0.1.0",
+  "description": "Canvas-based slanted 7-segment LED display renderer (red glow, decimal points, auto-centering).",
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "preview": "pnpm build && vite --host 0.0.0.0",
+    "watch": "vite build --watch"
+  },
+  "keywords": [
+    "canvas",
+    "seven-segment",
+    "7-segment",
+    "led",
+    "display",
+    "digit",
+    "nixie"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "unplugin-dts": "^1.0.2",
+    "vite": "^8.0.16"
+  },
+  "sideEffects": false
+}

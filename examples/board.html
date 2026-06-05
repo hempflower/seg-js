@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>seg-js · 开发板数码管示例</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(circle at 50% 30%, #2b2f36, #14161a 70%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage { position: relative; display: inline-block; max-width: 96vw; max-height: 96vh;
+           filter: drop-shadow(0 10px 30px rgba(0,0,0,.5)); }
+  .stage img { display: block; width: 100%; height: auto; max-height: 96vh;
+               user-select: none; -webkit-user-drag: none; }
+  .stage canvas { position: absolute; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <img id="board" src="board.png" alt="蓝桥杯开发板">
+    <canvas id="seg-left"></canvas>
+    <canvas id="seg-right"></canvas>
+  </div>
+
+  <script type="module">
+    import { createSegDisplay } from '../dist/index.js';
+
+    const board = document.getElementById('board');
+    const leftCanvas = document.getElementById('seg-left');
+    const rightCanvas = document.getElementById('seg-right');
+    const modules = [
+      { canvas: leftCanvas, x: 0.4607, y: 0.2264, w: 0.1487, h: 0.10 },
+      { canvas: rightCanvas, x: 0.6110, y: 0.2264, w: 0.1487, h: 0.10 },
+    ];
+
+    const syncCanvasLayout = () => {
+      const width = board.clientWidth;
+      const height = board.clientHeight;
+      for (const module of modules) {
+        module.canvas.style.left = `${module.x * width}px`;
+        module.canvas.style.top = `${module.y * height}px`;
+        module.canvas.style.width = `${module.w * width}px`;
+        module.canvas.style.height = `${module.h * height}px`;
+      }
+    };
+
+    const left = createSegDisplay(leftCanvas, {
+      digits: 4,
+      dots: [1, 3],
+    });
+    const right = createSegDisplay(rightCanvas, {
+      digits: 4,
+      dots: [1],
+    });
+
+    const p2 = (x) => String(x).padStart(2, '0');
+    const renderTime = () => {
+      const now = new Date();
+      const text = p2(now.getHours()) + p2(now.getMinutes()) + p2(now.getSeconds())
+        + p2(Math.floor(now.getMilliseconds() / 10));
+      left.update({ value: text.slice(0, 4), dots: [1, 3] });
+      right.update({ value: text.slice(4, 8), dots: now.getMilliseconds() < 500 ? [1] : [] });
+    };
+
+    const refresh = () => {
+      syncCanvasLayout();
+      left.fit();
+      right.fit();
+      renderTime();
+    };
+
+    if (board.complete) refresh();
+    else board.addEventListener('load', refresh, { once: true });
+    window.addEventListener('resize', refresh);
+    setInterval(renderTime, 50);
+  </script>
+</body>
+</html>
